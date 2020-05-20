@@ -7,7 +7,7 @@ import keyword
 import builtins
 import functools
 import _thread
-from types import GenericAlias
+from typing import List
 
 
 __all__ = ['dataclass',
@@ -152,6 +152,9 @@ __all__ = ['dataclass',
 # See _hash_action (below) for a coded version of this table.
 
 
+GenericAlias = type(List[int])
+
+
 # Raised when an attempt is made to modify a frozen class.
 class FrozenInstanceError(AttributeError): pass
 
@@ -186,6 +189,7 @@ _FIELD_INITVAR = _FIELD_BASE('_FIELD_INITVAR')
 # The name of an attribute on the class where we store the Field
 # objects.  Also used to check if a class is a Data Class.
 _FIELDS = '__dataclass_fields__'
+_LOCAL_FIELDS = '__dataclass_local_fields__'
 
 # The name of an attribute on the class that stores the parameters to
 # @dataclass.
@@ -212,7 +216,7 @@ class InitVar:
         else:
             # typing objects, e.g. List[int]
             type_name = repr(self.type)
-        return f'dataclasses.InitVar[{type_name}]'
+        return f'cooperative.dataclasses.InitVar[{type_name}]'
 
     def __class_getitem__(cls, type):
         return InitVar(type)
@@ -486,12 +490,12 @@ def _init_param(f):
     return f'{f.name}:_type_{f.name}{default}'
 
 
-def _init_fn(fields, frozen, has_post_init, self_name, globals):
+def _init_fn(cls, fields, frozen, has_post_init, self_name, globals):
     # fields contains both real fields and InitVar pseudo-fields.
 
-    body_lines = []
+    body_lines = [f"super({cls.__qualname__}, self).__init__(**kwargs)"]
     for f in fields:
-        line = dataclasses._field_init(f, frozen, globals, self_name)
+        line = _field_init(f, frozen, globals, self_name)
         # line is None means that this field doesn't require
         # initialization (it's a pseudo-field).  Just skip it.
         if line:
@@ -503,10 +507,6 @@ def _init_fn(fields, frozen, has_post_init, self_name, globals):
                               if f._field_type is _FIELD_INITVAR)
         body_lines.append(f'{self_name}.{_POST_INIT_NAME}({params_str})')
 
-    # If no body lines, use 'pass'.
-    if not body_lines:
-        body_lines = ['pass']
-
     # Build arguments: once we've encountered defaulted fields, all
     # following non-defaulted fields must be passed via keyword
     seen_default = False
@@ -514,20 +514,21 @@ def _init_fn(fields, frozen, has_post_init, self_name, globals):
     args = [self_name]
     for f in fields:
         if f.init:
-            if not (f.default is dataclasses.MISSING and f.default_factory is dataclasses.MISSING):
+            if not (f.default is MISSING and f.default_factory is MISSING):
                 seen_default = True
             elif seen_default and not keyword_only:
                 keyword_only = True
                 args.append("*")
-            args.append(dataclasses._init_param(f))
+            args.append(_init_param(f))
+    args.append("**kwargs")
 
     locals = {f'_type_{f.name}': f.type for f in fields}
-    return dataclasses._create_fn('__init__',
-                                  args,
-                                  body_lines,
-                                  locals=locals,
-                                  globals=globals,
-                                  return_type=None)
+    return _create_fn('__init__',
+                      args,
+                      body_lines,
+                      locals=locals,
+                      globals=globals,
+                      return_type=None)
 
 
 def _repr_fn(fields, globals):
@@ -599,8 +600,8 @@ def _is_classvar(a_type, typing):
 def _is_initvar(a_type, dataclasses):
     # The module we're checking against is the module we're
     # currently in (dataclasses.py).
-    return (a_type is dataclasses.InitVar
-            or type(a_type) is dataclasses.InitVar)
+    return (a_type is InitVar
+            or type(a_type) is InitVar)
 
 
 def _is_type(annotation, cls, a_module, a_type, is_type_predicate):
@@ -717,7 +718,7 @@ def _get_field(cls, a_name, a_type):
         dataclasses = sys.modules[__name__]
         if (_is_initvar(a_type, dataclasses)
             or (isinstance(f.type, str)
-                and _is_type(f.type, cls, dataclasses, dataclasses.InitVar,
+                and _is_type(f.type, cls, dataclasses, InitVar,
                              _is_initvar))):
             f._field_type = _FIELD_INITVAR
 
@@ -806,6 +807,7 @@ def _process_class(cls, init, repr, eq, order, unsafe_hash, frozen):
     # derived class fields overwrite base class fields, but the order
     # is defined by the base class, which is found first.
     fields = {}
+    local_fields = {}
 
     if cls.__module__ in sys.modules:
         globals = sys.modules[cls.__module__].__dict__
@@ -858,6 +860,7 @@ def _process_class(cls, init, repr, eq, order, unsafe_hash, frozen):
                   for name, type in cls_annotations.items()]
     for f in cls_fields:
         fields[f.name] = f
+        local_fields[f.name] = f
 
         # If the class attribute (which is the default value for this
         # field) exists and is of type 'Field', replace it with the
@@ -896,6 +899,9 @@ def _process_class(cls, init, repr, eq, order, unsafe_hash, frozen):
     # also marks this class as being a dataclass.
     setattr(cls, _FIELDS, fields)
 
+    # This is useful for implementing augmenting patterns.
+    setattr(cls, _LOCAL_FIELDS, local_fields)
+
     # Was this class defined with an explicit __hash__?  Note that if
     # __eq__ is defined in this class, then python will automatically
     # set __hash__ to None.  This is a heuristic, as it's possible
@@ -915,10 +921,11 @@ def _process_class(cls, init, repr, eq, order, unsafe_hash, frozen):
         has_post_init = hasattr(cls, _POST_INIT_NAME)
 
         # Include InitVars and regular fields (so, not ClassVars).
-        flds = [f for f in fields.values()
+        flds = [f for f in local_fields.values()
                 if f._field_type in (_FIELD, _FIELD_INITVAR)]
         _set_new_attribute(cls, '__init__',
-                           _init_fn(flds,
+                           _init_fn(cls,
+                                    flds,
                                     frozen,
                                     has_post_init,
                                     # The name to use for the "self"
