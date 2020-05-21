@@ -1,14 +1,14 @@
-import re
-import sys
+import builtins
 import copy
-import types
+import functools
 import inspect
 import keyword
-import builtins
-import functools
-import _thread
-from typing import List
+import re
+import sys
+import types
+from typing import Any, Callable, Dict, List, Optional, TypeVar
 
+import _thread
 
 __all__ = ['dataclass',
            'field',
@@ -323,8 +323,14 @@ class _DataclassParams:
 # This function is used instead of exposing Field creation directly,
 # so that a type checker can be told (via overloads) that this is a
 # function whose type depends on its parameters.
-def field(*, default=MISSING, default_factory=MISSING, init=True, repr=True,
-          hash=None, compare=True, metadata=None):
+def field(*,
+          default: Any = MISSING,
+          default_factory: Callable[[], Any] = MISSING,
+          init: bool = True,
+          repr: bool = True,
+          hash: Optional[bool] = None,
+          compare: bool = True,
+          metadata: Optional[Dict[str, Any]] = None) -> Field:
     """Return an object to identify dataclass fields.
 
     default is the default value of the field.  default_factory is a
@@ -1234,7 +1240,10 @@ def make_dataclass(cls_name, fields, *, bases=(), namespace=None, init=True,
                      unsafe_hash=unsafe_hash, frozen=frozen)
 
 
-def replace(obj, /, **changes):
+T = TypeVar('T', bound=Any)
+
+
+def replace(obj: T, /, **changes: Any) -> T:
     """Return a new object replacing specified fields with new values.
 
     This is especially useful for frozen classes.  Example usage:
