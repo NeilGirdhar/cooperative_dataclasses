@@ -1028,16 +1028,18 @@ def dataclass(cls=None, /, *, init=True, repr=True, eq=True, order=False,
     return wrap(cls)
 
 
-def fields(class_or_instance):
-    """Return a tuple describing the fields of this dataclass.
-
-    Accepts a dataclass or an instance of one. Tuple elements are of
-    type Field.
+def fields(class_or_instance, local=False):
+    """
+    Args:
+        class_or_instance: A dataclass or an instance of one.
+        local: If True, only returns fields defined in the class, but not superclasses.
+    Returns:
+        A tuple describing the fields of this dataclass.
     """
 
     # Might it be worth caching this, per class?
     try:
-        fields = getattr(class_or_instance, _FIELDS)
+        fields = getattr(class_or_instance, _LOCAL_FIELDS if local else _FIELDS)
     except AttributeError:
         raise TypeError('must be called with a dataclass type or instance')
 
