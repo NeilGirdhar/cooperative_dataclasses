@@ -999,6 +999,8 @@ def _process_class(cls, init, repr, eq, order, unsafe_hash, frozen):
         cls.__doc__ = (cls.__name__ +
                        str(inspect.signature(cls)).replace(' -> None', ''))
 
+    cls.replace = replace
+
     return cls
 
 

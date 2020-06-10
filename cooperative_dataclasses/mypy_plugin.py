@@ -4,13 +4,15 @@
 
 from typing import Callable, Dict, List, Optional, Set, Tuple
 
-from mypy.nodes import (ARG_OPT, ARG_POS, MDEF, Argument, AssignmentStmt, CallExpr, Context,
-                        Expression, JsonDict, NameExpr, PlaceholderNode, RefExpr, SymbolTableNode,
-                        TempNode, TypeInfo, TypeVarExpr, Var)
+from mypy.nodes import (ARG_OPT, ARG_POS, ARG_STAR2, MDEF, Argument, AssignmentStmt, CallExpr,
+                        Context, Expression, JsonDict, NameExpr, PlaceholderNode, RefExpr,
+                        SymbolTableNode, TempNode, TypeInfo, TypeVarExpr, Var)
 from mypy.plugin import ClassDefContext, Plugin, SemanticAnalyzerPluginInterface
 from mypy.plugins.common import _get_decorator_bool_argument, add_method, deserialize_and_fixup_type
 from mypy.server.trigger import make_wildcard_trigger
-from mypy.types import Instance, NoneType, Type, TypeVarDef, TypeVarType, get_proper_type
+from mypy.types import (AnyType, Instance, NoneType, Type, TypeOfAny, TypeVarDef, TypeVarType,
+                        get_proper_type)
+from mypy.typevars import fill_typevars
 from typing_extensions import Final
 
 
@@ -39,6 +41,7 @@ field_makers = {
 }  # type: Final
 
 SELF_TVAR_NAME = '_DT'  # type: Final
+SELF_UVAR_NAME = '_U_DT'  # type: Final
 
 
 class DataclassAttribute:
@@ -117,6 +120,24 @@ class DataclassTransformer:
             'order': _get_decorator_bool_argument(self._ctx, 'order', False),
             'frozen': _get_decorator_bool_argument(self._ctx, 'frozen', False),
         }
+
+        if info.get('replace') is None:
+            obj_type = ctx.api.named_type('__builtins__.object')
+            self_tvar_expr = TypeVarExpr(SELF_UVAR_NAME, info.fullname + '.' + SELF_UVAR_NAME,
+                                         [], obj_type)
+            info.names[SELF_UVAR_NAME] = SymbolTableNode(MDEF, self_tvar_expr)
+            replace_tvar_def = TypeVarDef(SELF_UVAR_NAME, info.fullname + '.' + SELF_UVAR_NAME,
+                                        -1, [], fill_typevars(info))
+            replace_other_type = TypeVarType(replace_tvar_def)
+
+            add_method(
+                ctx,
+                'replace',
+                args=[Argument(Var('changes', AnyType(TypeOfAny.explicit)),
+                               AnyType(TypeOfAny.explicit), None, ARG_STAR2)],
+                return_type=replace_other_type,
+                self_type=replace_other_type,
+                tvar_def=replace_tvar_def)
 
         # If there are no attributes, it may be that the semantic analyzer has not
         # processed them yet. In order to work around this, we can simply skip generating
