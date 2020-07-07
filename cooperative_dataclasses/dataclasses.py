@@ -1,3 +1,4 @@
+import _thread
 import builtins
 import copy
 import functools
@@ -7,8 +8,6 @@ import re
 import sys
 import types
 from typing import Any, Callable, Dict, List, Optional, TypeVar
-
-import _thread
 
 __all__ = ['dataclass',
            'field',

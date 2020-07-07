@@ -25,7 +25,6 @@ line_length = 100
 known_first_party = []
 known_third_party = []
 multi_line_output = 0
-not_skip = "__init__.py"
 skip_glob = [".pytype/*.py"]
 skip = []
 
