@@ -31,12 +31,12 @@ def plugin(version: str):
 
 # The set of decorators that generate dataclasses.
 dataclass_makers = {
-    'cmm.tensors.dataclass.dataclass',
+    'tjax.dataclass.dataclass',
     'cooperative_dataclasses.dataclass',
 }  # type: Final
 
 field_makers = {
-    'cmm.tensors.dataclass.field',
+    'tjax.dataclass.field',
     'cooperative_dataclasses.field'
 }  # type: Final
 
