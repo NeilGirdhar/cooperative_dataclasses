@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "cooperative_dataclasses"
-version = "0.1"
+version = "0.2"
 description = "Cooperative dataclasses."
-# license = "MIT"
+license = "MIT"
 authors = ["Neil Girdhar <mistersheik@gmail.com>"]
 readme = "README.rst"
 repository = "https://github.com/NeilGirdhar/cooperative_dataclasses"
@@ -13,7 +13,8 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
-]
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "License :: OSI Approved :: MIT License"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
