@@ -1003,7 +1003,8 @@ def _process_class(cls, init, repr, eq, order, unsafe_hash, frozen):
     return cls
 
 
-def dataclass(cls=None, /, *, init=True, repr=True, eq=True, order=False,
+# TODO: use positional-only arguments
+def dataclass(cls=None, *, init=True, repr=True, eq=True, order=False,
               unsafe_hash=False, frozen=False):
     """Returns the same class as was passed in, with dunder methods
     added based on the fields defined in the class.
@@ -1246,7 +1247,8 @@ def make_dataclass(cls_name, fields, *, bases=(), namespace=None, init=True,
 T = TypeVar('T', bound=Any)
 
 
-def replace(obj: T, /, **changes: Any) -> T:
+# TODO: use positional-only arguments
+def replace(obj: T, **changes: Any) -> T:
     """Return a new object replacing specified fields with new values.
 
     This is especially useful for frozen classes.  Example usage:
