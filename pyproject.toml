@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cooperative_dataclasses"
-version = "0.2.2"
+version = "0.2.4"
 description = "Cooperative dataclasses."
 license = "MIT"
 authors = ["Neil Girdhar <mistersheik@gmail.com>"]
