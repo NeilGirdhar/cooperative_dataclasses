@@ -7,7 +7,7 @@ import keyword
 import re
 import sys
 import types
-from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar
 
 __all__ = ['dataclass',
            'field',
@@ -1004,8 +1004,8 @@ def _process_class(cls, init, repr, eq, order, unsafe_hash, frozen):
 
 
 # TODO: use positional-only arguments
-def dataclass(cls=None, *, init=True, repr=True, eq=True, order=False,
-              unsafe_hash=False, frozen=False):
+def dataclass(cls: Type[Any] = None, *, init: bool = True, repr: bool = True, eq: bool = True,
+              order: bool = False, unsafe_hash: bool = False, frozen: bool = False):
     """Returns the same class as was passed in, with dunder methods
     added based on the fields defined in the class.
 
