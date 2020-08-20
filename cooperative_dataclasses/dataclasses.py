@@ -7,7 +7,7 @@ import keyword
 import re
 import sys
 import types
-from typing import Any, Callable, Dict, List, Optional, TypeVar
+from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar
 
 __all__ = ['dataclass',
            'field',
@@ -1030,7 +1030,7 @@ def dataclass(cls=None, *, init=True, repr=True, eq=True, order=False,
     return wrap(cls)
 
 
-def fields(class_or_instance, local=False):
+def fields(class_or_instance: Any, local: bool = False) -> Tuple[Field, ...]:
     """
     Args:
         class_or_instance: A dataclass or an instance of one.
