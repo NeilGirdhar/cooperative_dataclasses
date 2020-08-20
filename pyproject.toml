@@ -35,7 +35,6 @@ max-line-length = 100
 exclude = ["__init__.py", "__pycache__", "README.rst"]
 
 [tool.pytest]
-norecursedirs = "backup"
 
 [tool.pytype]
 disable = "ignored-abstractmethod"
@@ -44,3 +43,7 @@ exclude = ["**/*_test.py", "**/test_*.py'"]
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
+
+[tool.dephell.main]
+from = {format = "poetry", path = "pyproject.toml"}
+to = {format = "setuppy", path = "setup.py"}
