@@ -7,7 +7,7 @@ import keyword
 import re
 import sys
 import types
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar, overload
 
 __all__ = ['dataclass',
            'field',
@@ -1003,9 +1003,24 @@ def _process_class(cls, init, repr, eq, order, unsafe_hash, frozen):
     return cls
 
 
+T = TypeVar('T', bound=Any)
+
+
+@overload
+def dataclass(*, init: bool = True, repr: bool = True, eq: bool = True,
+              order: bool = False, unsafe_hash: bool = False, frozen: bool = False) -> Callable[
+                  [Type[T]], Type[T]]:
+    ...
+
+@overload
+def dataclass(cls: Type[T], *, init: bool = True, repr: bool = True, eq: bool = True,
+              order: bool = False, unsafe_hash: bool = False, frozen: bool = False) -> Type[T]:
+    ...
+
 # TODO: use positional-only arguments
-def dataclass(cls: Type[Any] = None, *, init: bool = True, repr: bool = True, eq: bool = True,
-              order: bool = False, unsafe_hash: bool = False, frozen: bool = False):
+def dataclass(cls: Optional[Type[Any]] = None, *, init: bool = True, repr: bool = True,
+              eq: bool = True, order: bool = False, unsafe_hash: bool = False,
+              frozen: bool = False) -> Any:
     """Returns the same class as was passed in, with dunder methods
     added based on the fields defined in the class.
 
@@ -1242,9 +1257,6 @@ def make_dataclass(cls_name, fields, *, bases=(), namespace=None, init=True,
     cls = types.new_class(cls_name, bases, {}, lambda ns: ns.update(namespace))
     return dataclass(cls, init=init, repr=repr, eq=eq, order=order,
                      unsafe_hash=unsafe_hash, frozen=frozen)
-
-
-T = TypeVar('T', bound=Any)
 
 
 # TODO: use positional-only arguments
