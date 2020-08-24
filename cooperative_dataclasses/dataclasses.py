@@ -528,6 +528,10 @@ def _init_fn(cls, fields, frozen, has_post_init, self_name, globals):
     args.append("**kwargs")
 
     locals = {f'_type_{f.name}': f.type for f in fields}
+    locals.update({
+        'MISSING': MISSING,
+        '_HAS_DEFAULT_FACTORY': _HAS_DEFAULT_FACTORY,
+    })
     return _create_fn('__init__',
                       args,
                       body_lines,
