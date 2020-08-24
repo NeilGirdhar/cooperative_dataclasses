@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cooperative_dataclasses"
-version = "0.2.4"
+version = "0.2.5"
 description = "Cooperative dataclasses."
 license = "MIT"
 authors = ["Neil Girdhar <mistersheik@gmail.com>"]
@@ -40,10 +40,10 @@ exclude = ["__init__.py", "__pycache__", "README.rst"]
 disable = "ignored-abstractmethod"
 exclude = ["**/*_test.py", "**/test_*.py'"]
 
+[tool.dephell.main]
+from = {format = "poetry", path = "pyproject.toml"}
+to = {format = "setuppy", path = "setup.py"}
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
 
-[tool.dephell.main]
-from = {format = "poetry", path = "pyproject.toml"}
-to = {format = "setuppy", path = "setup.py"}
