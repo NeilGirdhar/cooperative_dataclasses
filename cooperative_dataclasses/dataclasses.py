@@ -7,7 +7,8 @@ import keyword
 import re
 import sys
 import types
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar, overload
+from typing import (Any, Callable, Dict, List, Mapping, Optional, Tuple, Type, TypeVar,
+                    overload)
 
 __all__ = ['dataclass',
            'field',
@@ -1008,6 +1009,7 @@ def _process_class(cls, init, repr, eq, order, unsafe_hash, frozen):
 
 
 T = TypeVar('T', bound=Any)
+U = TypeVar('U', bound=Mapping[Any, Any])
 
 
 @overload
@@ -1074,14 +1076,14 @@ def _is_dataclass_instance(obj):
     return hasattr(type(obj), _FIELDS)
 
 
-def is_dataclass(obj):
+def is_dataclass(obj: Any) -> bool:
     """Returns True if obj is a dataclass or an instance of a
     dataclass."""
     cls = obj if isinstance(obj, type) else type(obj)
     return hasattr(cls, _FIELDS)
 
 
-def asdict(obj, *, dict_factory=dict):
+def asdict(obj: Any, *, dict_factory: Callable[[List[Tuple[Any, Any]]], U] = dict) -> U:
     """Return the fields of a dataclass instance as a new dictionary mapping
     field names to field values.
 
@@ -1105,7 +1107,7 @@ def asdict(obj, *, dict_factory=dict):
     return _asdict_inner(obj, dict_factory)
 
 
-def _asdict_inner(obj, dict_factory):
+def _asdict_inner(obj: Any, dict_factory: Callable[[List[Tuple[str, Any]]], U] = dict) -> U:
     if _is_dataclass_instance(obj):
         result = []
         for f in fields(obj):
